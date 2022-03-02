@@ -1,16 +1,10 @@
 <template>
-  <transition name="el-loading-fade" @after-leave="handleAfterLeave">
+  <transition>
     <div
       v-show="visible"
-      class="el-loading-mask"
-      :style="{ backgroundColor: background || '' }"
-      :class="[customClass, { 'is-fullscreen': fullscreen }]">
+      class="el-loading-mask">
       <div class="el-loading-spinner">
-        <svg v-if="!spinner" class="circular" viewBox="25 25 50 50">
-          <circle class="path" cx="50" cy="50" r="20" fill="none"/>
-        </svg>
-        <i v-else :class="spinner"></i>
-        <p v-if="text" class="el-loading-text">{{ text }}</p>
+        <p class="el-loading-text">加载中</p>
       </div>
     </div>
   </transition>
@@ -20,22 +14,33 @@
   export default {
     data() {
       return {
-        text: null,
-        spinner: null,
-        background: null,
-        fullscreen: true,
-        visible: false,
-        customClass: ''
+        visible: false
       };
-    },
-
-    methods: {
-      handleAfterLeave() {
-        this.$emit('after-leave');
-      },
-      setText(text) {
-        this.text = text;
-      }
     }
   };
 </script>
+<style lang="scss" scoped>
+.el-loading-mask {
+  position: absolute;
+  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.8);
+  margin: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  .el-loading-spinner {
+    top: 50%;
+    margin-top: -20px;
+    width: 100%;
+    text-align: center;
+    position: absolute;
+    height: 40px;
+    .el-loading-text {
+      color: #409EFF;
+      margin: 3px 0;
+      font-size: 14px;
+    }
+  }
+}
+</style>

@@ -1,116 +1,58 @@
 import Vue from 'vue';
 import Loading from './loading.vue';
-import { addClass, removeClass, getStyle, PopupManager, afterLeave } from './util.js';
+import { addClass, getStyle } from './util.js';
 const Mask = Vue.extend(Loading);
 
 const loadingDirective = {};
 loadingDirective.install = Vue => {
-  if (Vue.prototype.$isServer) return;
   const toggleLoading = (el, binding) => {
     if (binding.value) {
+      // v-loading的值为true
       Vue.nextTick(() => {
-        if (binding.modifiers.fullscreen) {
-          el.originalPosition = getStyle(document.body, 'position');
-          el.originalOverflow = getStyle(document.body, 'overflow');
-          el.maskStyle.zIndex = PopupManager.nextZIndex();
-
-          addClass(el.mask, 'is-fullscreen');
-          insertDom(document.body, el, binding);
-        } else {
-          removeClass(el.mask, 'is-fullscreen');
-
-          if (binding.modifiers.body) {
-            el.originalPosition = getStyle(document.body, 'position');
-
-            ['top', 'left'].forEach(property => {
-              const scroll = property === 'top' ? 'scrollTop' : 'scrollLeft';
-              el.maskStyle[property] = el.getBoundingClientRect()[property] +
-                document.body[scroll] +
-                document.documentElement[scroll] -
-                parseInt(getStyle(document.body, `margin-${ property }`), 10) +
-                'px';
-            });
-            ['height', 'width'].forEach(property => {
-              el.maskStyle[property] = el.getBoundingClientRect()[property] + 'px';
-            });
-
-            insertDom(document.body, el, binding);
-          } else {
-            el.originalPosition = getStyle(el, 'position');
-            insertDom(el, el, binding);
-          }
-        }
+        el.originalPosition = getStyle(el, 'position');
+        insertDom(el, el, binding);
       });
     } else {
-      afterLeave(el.instance, () => {
-        if (!el.instance.hiding) return;
-        el.domVisible = false;
-        const target = binding.modifiers.fullscreen || binding.modifiers.body
-          ? document.body
-          : el;
-        removeClass(target, 'el-loading-parent--relative');
-        removeClass(target, 'el-loading-parent--hidden');
-        el.instance.hiding = false;
-      }, 300, true);
+      // 值为false 隐藏loading
       el.instance.visible = false;
-      el.instance.hiding = true;
     }
   };
-  const insertDom = (parent, el, binding) => {
+
+  const insertDom = (parent, el) => {
+    // 第一次进入，判断是否有dom，已有就修改是否可见，没有就插入
     if (!el.domVisible && getStyle(el, 'display') !== 'none' && getStyle(el, 'visibility') !== 'hidden') {
+      // 插入dom
       Object.keys(el.maskStyle).forEach(property => {
         el.mask.style[property] = el.maskStyle[property];
       });
-
       if (el.originalPosition !== 'absolute' && el.originalPosition !== 'fixed') {
         addClass(parent, 'el-loading-parent--relative');
       }
-      if (binding.modifiers.fullscreen && binding.modifiers.lock) {
-        addClass(parent, 'el-loading-parent--hidden');
-      }
-      el.domVisible = true;
-
-      parent.appendChild(el.mask);
-      Vue.nextTick(() => {
-        if (el.instance.hiding) {
-          el.instance.$emit('after-leave');
-        } else {
-          el.instance.visible = true;
-        }
-      });
-      el.domInserted = true;
-    } else if (el.domVisible && el.instance.hiding === true) {
+      el.domVisible = true;// 控制是否已经插入dom，第一次
+      parent.appendChild(el.mask); // 插入dom
+      el.instance.visible = true; // 可见插入的loading蒙层
+      el.domInserted = true; // 是否插入了dom，在unbind卸载指令时使用
+    }
+    if (el.domVisible) {
+      // 已经插入了dom就修改visible属性。
       el.instance.visible = true;
-      el.instance.hiding = false;
     }
   };
 
   Vue.directive('loading', {
-    bind: function(el, binding, vnode) {
-      const textExr = el.getAttribute('element-loading-text');
-      const spinnerExr = el.getAttribute('element-loading-spinner');
-      const backgroundExr = el.getAttribute('element-loading-background');
-      const customClassExr = el.getAttribute('element-loading-custom-class');
-      const vm = vnode.context;
+    bind: function(el, binding) {
       const mask = new Mask({
-        el: document.createElement('div'),
-        data: {
-          text: vm && vm[textExr] || textExr,
-          spinner: vm && vm[spinnerExr] || spinnerExr,
-          background: vm && vm[backgroundExr] || backgroundExr,
-          customClass: vm && vm[customClassExr] || customClassExr,
-          fullscreen: !!binding.modifiers.fullscreen
-        }
+        el: document.createElement('div')
+        // 可以在这里扩展样式；给data赋值
       });
+      // instance是组件整体，就是组件中的this，mask是组件的dom。
       el.instance = mask;
       el.mask = mask.$el;
-      el.maskStyle = {};
-
-      binding.value && toggleLoading(el, binding);
+      el.maskStyle = {}; // 定位的style
+      toggleLoading(el, binding);
     },
 
     update: function(el, binding) {
-      el.instance.setText(el.getAttribute('element-loading-text'));
       if (binding.oldValue !== binding.value) {
         toggleLoading(el, binding);
       }
