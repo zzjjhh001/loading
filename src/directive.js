@@ -18,27 +18,8 @@ loadingDirective.install = Vue => {
           insertDom(document.body, el, binding);
         } else {
           removeClass(el.mask, 'is-fullscreen');
-
-          if (binding.modifiers.body) {
-            el.originalPosition = getStyle(document.body, 'position');
-
-            ['top', 'left'].forEach(property => {
-              const scroll = property === 'top' ? 'scrollTop' : 'scrollLeft';
-              el.maskStyle[property] = el.getBoundingClientRect()[property] +
-                document.body[scroll] +
-                document.documentElement[scroll] -
-                parseInt(getStyle(document.body, `margin-${ property }`), 10) +
-                'px';
-            });
-            ['height', 'width'].forEach(property => {
-              el.maskStyle[property] = el.getBoundingClientRect()[property] + 'px';
-            });
-
-            insertDom(document.body, el, binding);
-          } else {
-            el.originalPosition = getStyle(el, 'position');
-            insertDom(el, el, binding);
-          }
+          el.originalPosition = getStyle(el, 'position');
+          insertDom(el, el, binding);
         }
       });
     } else {

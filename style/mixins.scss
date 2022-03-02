@@ -1,4 +1,4 @@
-$modifier-separator: '__';
+$modifier-separator: '--';
 $state-prefix: 'is-';
 @mixin m($modifier) {
   $selector: &;

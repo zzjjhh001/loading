@@ -265,20 +265,3 @@ export function afterLeave(instance, callback, speed = 300, once = false) {
     afterLeaveCallback();
   }, speed + 100);
 }
-
-export function merge(target) {
-  for (let i = 1, j = arguments.length; i < j; i++) {
-    let source = arguments[i] || {};
-    for (let prop in source) {
-      // 解决esLint 原来是 => if (source.hasOwnProperty(prop)) {
-      if (Object.prototype.hasOwnProperty.call(source, prop)) {
-        let value = source[prop];
-        if (value !== undefined) {
-          target[prop] = value;
-        }
-      }
-    }
-  }
-
-  return target;
-}
